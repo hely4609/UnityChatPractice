@@ -2,20 +2,19 @@ using System.Collections;
 using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class ChatWindow : MonoBehaviour
 {
     [SerializeField] protected TextMeshProUGUI textUI;
     [SerializeField] protected TMP_InputField inputUI;
+    [SerializeField] protected Image myPick;
+    public Image MyPick { get { return myPick; } }  
+    [SerializeField] protected Image hostPick;
+    public Image HostPick { get { return hostPick; } }  
     void Start()
     {
         Client.RecieveChat += (message) => { ReceieveChat(message); };
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        
     }
 
     public void SendChat(string message)
@@ -25,7 +24,7 @@ public class ChatWindow : MonoBehaviour
         inputUI.SetTextWithoutNotify("");
     }
 
-    protected void ReceieveChat(string message)
+    public void ReceieveChat(string message)
     {
         textUI.text += $"{message}\n";
     }

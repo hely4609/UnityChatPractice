@@ -12,15 +12,23 @@ using System.Threading.Tasks;
 using System.Text;
 using System.Collections;
 using System.Collections.Generic;
+using System.Reflection;
 
-namespace Project_RPS
+namespace RPS_Server
 {
     internal class Program
     {
+        enum RPS : byte { Rock, Paper, Scissors }
+        enum MessageType : byte { Quit, Chat, RPS, Arrive, MyNumber, Lost, Host }
+
         // 돌고 있는지 없는지를 표시해봅시다!
         private static bool isRunning = false;
         private static byte[] greetingMessage = null;
         private static List<Socket> userSocketList = new List<Socket>();
+        static Dictionary<int, RPS> userRPSData = new Dictionary<int, RPS>();
+        static Dictionary<int, bool> lostInfo = new Dictionary<int, bool>();
+        static int hostNumber = 0;
+
         // 포트 번호
         private const int port = 56789;
 
@@ -113,7 +121,37 @@ namespace Project_RPS
                             byte[] buffer = new byte[1024];
 
                             Console.WriteLine($"Connected : {currentClient.Connected}");
-                            currentClient.Send(greetingMessage);
+
+                            byte[] greetingBuffer = new byte[6];
+                            byte[] arriveBuffer = new byte[6];
+
+                            greetingBuffer[0] = (byte)MessageType.Arrive;
+                            arriveBuffer[0] = (byte)MessageType.Arrive;
+                            IntInsertToByteArray(userSocketList.IndexOf(currentClient), ref arriveBuffer, 1, 4);
+                            if (userRPSData.ContainsKey(userSocketList.IndexOf(currentClient)))
+                            {
+                                userRPSData[userSocketList.IndexOf(currentClient)] = RPS.Rock;
+                            }
+                            else
+                            {
+                                userRPSData.Add(userSocketList.IndexOf(currentClient), RPS.Rock);
+                            }
+                        
+
+                            foreach (Socket currentSocket in userSocketList)
+                            {
+                                IntInsertToByteArray(userSocketList.IndexOf(currentSocket), ref greetingBuffer, 1, 4);
+                                greetingBuffer[5] = (byte)userRPSData[userSocketList.IndexOf(currentSocket)];
+                                currentClient.Send(greetingBuffer);
+                                if(currentClient != currentSocket)
+                                {
+                                    currentSocket.Send(arriveBuffer);
+                                }
+                            }
+
+                            greetingBuffer = new byte[5];
+                            IntInsertToByteArray(userSocketList.IndexOf(currentClient), ref greetingBuffer, 1, 4);
+
                             while (isRunning)
                             {
                                 if (currentClient.Poll(1000000, SelectMode.SelectRead))
@@ -125,17 +163,7 @@ namespace Project_RPS
                                     }
 
                                     int length = currentClient.Receive(buffer);
-                                    if (length > 0)
-                                    {
-                                        int index = userSocketList.FindIndex(target => target == currentClient);
-                                        string message = $"User[{index}] : " + Encoding.UTF8.GetString(buffer, 0, length);
-
-                                        Console.WriteLine(message);
-                                        foreach (var socket in userSocketList)
-                                        {
-                                            socket.Send(Encoding.UTF8.GetBytes(message));
-                                        }
-                                    }
+                                    CallBack(ref currentClient, ref buffer, length);
                                 }
                             }
 
@@ -149,6 +177,97 @@ namespace Project_RPS
                 });
             }
 
+        }
+
+        public static void CallBack(ref Socket currentClient, ref byte[] buffer, int length)
+        {
+            if (length > 0)
+            {
+                byte[] currentBuffer = new byte[length - 1];
+                byte[] recieveBuffer = new byte[length];
+                Array.Copy(buffer, 1,currentBuffer,0, currentBuffer.Length);
+                Array.Copy(buffer, recieveBuffer, length);
+
+                switch ((MessageType)buffer[0])
+                {
+                    case MessageType.Chat:
+                        {
+                            string message =Encoding.UTF8.GetString(currentBuffer, 0, currentBuffer.Length);
+                            Console.WriteLine(message);
+                            foreach (Socket currentSocket in userSocketList)
+                            {
+                                currentSocket.Send(recieveBuffer);
+                            }
+                            break;
+                        }
+                   case MessageType.RPS:
+                        {
+                            userRPSData[userSocketList.IndexOf(currentClient)] = (RPS)currentBuffer[0];
+                            byte[] sendBuffer = new byte[6];
+                            sendBuffer[0] = (byte)MessageType.RPS;
+                            IntInsertToByteArray(userSocketList.IndexOf(currentClient), ref sendBuffer, 1, 4);
+                            sendBuffer[5] = currentBuffer[0];
+                            foreach (Socket currentSocket in userSocketList)
+                            {
+                                currentSocket.Send(sendBuffer);
+                            }
+                            break;
+                        }
+                    case MessageType.Lost:
+                        {
+                            lostInfo[userSocketList.IndexOf(currentClient)] = Convert.ToBoolean(currentBuffer[0]);
+                            byte[] sendBuffer = new byte[6];
+                            sendBuffer[0] = (byte)(MessageType.Lost);
+                            IntInsertToByteArray(userSocketList.IndexOf(currentClient), ref sendBuffer, 1, 4);
+                            sendBuffer[5] = currentBuffer[0];
+                            foreach (Socket currentSocket in userSocketList)
+                            {
+                                currentSocket.Send(sendBuffer);
+                            }
+                            break;
+                        }
+                    case MessageType.Host:
+                        {
+                            hostNumber = ByteArrayToInt(ref recieveBuffer, 1, 4);
+                            byte[] sendBuffer = new byte[9];
+                            sendBuffer[0] = (byte)MessageType.Host;
+                            IntInsertToByteArray(hostNumber, ref sendBuffer, 1, 4);
+                            currentClient.Send(sendBuffer);
+                            break;
+                        }
+                }
+                Array.Clear(buffer, 0, length);
+            }
+        }
+
+
+        public static int ByteArrayToInt(ref byte[] array, int start, int end)
+        {
+            if (array == null || array.Length < 4 || end - start < 3)
+            {
+                return -1;
+            }
+            // 리틀 엔디안.
+            // 큰것이 앞으로옴.
+
+            int result = 0;
+            for (int i = start; i <= end; i++)
+            {
+                result >>= 8;
+                result += array[i];
+            }
+            return result;
+        }
+
+        public static void IntInsertToByteArray(int target, ref byte[] array, int start, int end)
+        {
+            if (array == null || array.Length < 4 || end - start < 3)
+            { return; }
+
+            for (int i = end; i >= start; --i)
+            {
+                array[i] = (byte)(0xFF000000 & (target >> 8 * (i - end)));
+            }
         }
     }
 }

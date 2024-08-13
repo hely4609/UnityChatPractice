@@ -1,0 +1,8 @@
+C:\Users\Administrator\Desktop\RPS_Network\UnityChatPractice\ServerCode\bin\Debug\ServerCode.exe.config
+C:\Users\Administrator\Desktop\RPS_Network\UnityChatPractice\ServerCode\bin\Debug\ServerCode.exe
+C:\Users\Administrator\Desktop\RPS_Network\UnityChatPractice\ServerCode\bin\Debug\ServerCode.pdb
+C:\Users\Administrator\Desktop\RPS_Network\UnityChatPractice\ServerCode\obj\Debug\ServerCode.csproj.AssemblyReference.cache
+C:\Users\Administrator\Desktop\RPS_Network\UnityChatPractice\ServerCode\obj\Debug\ServerCode.csproj.SuggestedBindingRedirects.cache
+C:\Users\Administrator\Desktop\RPS_Network\UnityChatPractice\ServerCode\obj\Debug\ServerCode.csproj.CoreCompileInputs.cache
+C:\Users\Administrator\Desktop\RPS_Network\UnityChatPractice\ServerCode\obj\Debug\ServerCode.exe
+C:\Users\Administrator\Desktop\RPS_Network\UnityChatPractice\ServerCode\obj\Debug\ServerCode.pdb
