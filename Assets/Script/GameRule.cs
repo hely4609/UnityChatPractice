@@ -34,19 +34,24 @@ public class GameRule : MonoBehaviour
     public void RockButton()
     {
         Client.ClaimRPS(RPS.Rock);
-        //displayWindow.MyPick.sprite = 
+
+        displayWindow.MyPick.sprite = Resources.Load<Sprite>("Sprite/rock");
         Debug.Log("¡÷∏‘");
 
     }
     public void PaperButton()
     {
         Client.ClaimRPS(RPS.Paper);
+        displayWindow.MyPick.sprite = Resources.Load<Sprite>("Sprite/paper");
+
         Debug.Log("∫∏");
 
     }
     public void ScissorsButton()
     {
-        Client.ClaimRPS(RPS.Scissors); 
+        Client.ClaimRPS(RPS.Scissors);
+        displayWindow.MyPick.sprite = Resources.Load<Sprite>("Sprite/scissors");
+
         Debug.Log("∞°¿ß");
     }
 

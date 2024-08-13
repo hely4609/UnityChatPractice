@@ -1036,7 +1036,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
+  m_Sprite: {fileID: 21300000, guid: d58757a6876680c4bb56b28627afd370, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -1083,9 +1083,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 800d9b39fcfa9b64492b73de69a99230, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  chatWindow: {fileID: 1114521061}
   serverAddress: 127.0.0.1
   port: 56789
-  maxTime: 5
+  maxTime: 3
   isGameStart: 0
   isHost: 0
 --- !u!4 &752553832
@@ -1490,6 +1491,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   textUI: {fileID: 1168772249}
+  remainPlayerUI: {fileID: 0}
   inputUI: {fileID: 558289080}
   myPick: {fileID: 741977423}
   hostPick: {fileID: 1994101787}
@@ -1505,7 +1507,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: ef7ae4f028faa2b40bc5075771e16653, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  displayWindow: {fileID: 0}
+  displayWindow: {fileID: 1114521061}
 --- !u!1 &1151601619
 GameObject:
   m_ObjectHideFlags: 0
@@ -2677,7 +2679,7 @@ GameObject:
   - component: {fileID: 1933038054}
   - component: {fileID: 1933038053}
   m_Layer: 5
-  m_Name: Text (TMP) (3)
+  m_Name: RemainPlayer
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -2982,7 +2984,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
+  m_Sprite: {fileID: 21300000, guid: 395d50d3456c6264ab59821d2cd91ffb, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
