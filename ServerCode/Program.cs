@@ -136,21 +136,25 @@ namespace RPS_Server
                             {
                                 userRPSData.Add(userSocketList.IndexOf(currentClient), RPS.Rock);
                             }
-                        
+
 
                             foreach (Socket currentSocket in userSocketList)
                             {
                                 IntInsertToByteArray(userSocketList.IndexOf(currentSocket), ref greetingBuffer, 1, 4);
                                 greetingBuffer[5] = (byte)userRPSData[userSocketList.IndexOf(currentSocket)];
                                 currentClient.Send(greetingBuffer);
-                                if(currentClient != currentSocket)
+                                Console.WriteLine(greetingBuffer.Length);
+                                if (currentClient != currentSocket)
                                 {
                                     currentSocket.Send(arriveBuffer);
                                 }
+                                Thread.Sleep(1);
                             }
-
                             greetingBuffer = new byte[5];
+                            greetingBuffer[0] = (byte)MessageType.MyNumber;
                             IntInsertToByteArray(userSocketList.IndexOf(currentClient), ref greetingBuffer, 1, 4);
+                            currentClient.Send(greetingBuffer);
+
 
                             while (isRunning)
                             {
@@ -185,14 +189,14 @@ namespace RPS_Server
             {
                 byte[] currentBuffer = new byte[length - 1];
                 byte[] recieveBuffer = new byte[length];
-                Array.Copy(buffer, 1,currentBuffer,0, currentBuffer.Length);
+                Array.Copy(buffer, 1, currentBuffer, 0, currentBuffer.Length);
                 Array.Copy(buffer, recieveBuffer, length);
 
                 switch ((MessageType)buffer[0])
                 {
                     case MessageType.Chat:
                         {
-                            string message =Encoding.UTF8.GetString(currentBuffer, 0, currentBuffer.Length);
+                            string message = Encoding.UTF8.GetString(currentBuffer, 0, currentBuffer.Length);
                             Console.WriteLine(message);
                             foreach (Socket currentSocket in userSocketList)
                             {
@@ -200,7 +204,7 @@ namespace RPS_Server
                             }
                             break;
                         }
-                   case MessageType.RPS:
+                    case MessageType.RPS:
                         {
                             userRPSData[userSocketList.IndexOf(currentClient)] = (RPS)currentBuffer[0];
                             byte[] sendBuffer = new byte[6];
@@ -215,11 +219,15 @@ namespace RPS_Server
                         }
                     case MessageType.Lost:
                         {
-                            lostInfo[userSocketList.IndexOf(currentClient)] = Convert.ToBoolean(currentBuffer[0]);
+                            int t = ByteArrayToInt(ref currentBuffer, 0, 3);
+                            Console.WriteLine(t+"숫자 / "+ Convert.ToBoolean(currentBuffer[4]));
+                            
+                            lostInfo[userSocketList.IndexOf(currentClient)] = Convert.ToBoolean(currentBuffer[4]);
+
                             byte[] sendBuffer = new byte[6];
                             sendBuffer[0] = (byte)(MessageType.Lost);
-                            IntInsertToByteArray(userSocketList.IndexOf(currentClient), ref sendBuffer, 1, 4);
-                            sendBuffer[5] = currentBuffer[0];
+                            IntInsertToByteArray(t, ref sendBuffer, 1, 4);
+                            sendBuffer[5] = currentBuffer[4];
                             foreach (Socket currentSocket in userSocketList)
                             {
                                 currentSocket.Send(sendBuffer);
@@ -228,11 +236,16 @@ namespace RPS_Server
                         }
                     case MessageType.Host:
                         {
-                            hostNumber = ByteArrayToInt(ref recieveBuffer, 1, 4);
-                            byte[] sendBuffer = new byte[9];
+                            hostNumber = ByteArrayToInt(ref currentBuffer, 0, 3);
+
+                            byte[] sendBuffer = new byte[5];
                             sendBuffer[0] = (byte)MessageType.Host;
                             IntInsertToByteArray(hostNumber, ref sendBuffer, 1, 4);
-                            currentClient.Send(sendBuffer);
+                            foreach (Socket currentSocket in userSocketList)
+                            {
+                                currentSocket.Send(sendBuffer);
+                            }
+                            //currentClient.Send(sendBuffer);
                             break;
                         }
                 }
@@ -266,7 +279,7 @@ namespace RPS_Server
 
             for (int i = end; i >= start; --i)
             {
-                array[i] = (byte)(0xFF000000 & (target >> 8 * (i - end)));
+                array[i] = (byte)(0x000000FF & (target >> 8 * (i - end)));
             }
         }
     }

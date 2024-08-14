@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 
 public class GameRule : MonoBehaviour
@@ -54,5 +55,13 @@ public class GameRule : MonoBehaviour
 
         Debug.Log("°¡À§");
     }
+    public void hostButton()
+    {
 
+
+        int numb = UnityEngine.Random.Range(0, Client.userInfo.Count);
+        Debug.Log($"{numb}");
+        Client.ClaimHost(numb);
+
+    }
 }

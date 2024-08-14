@@ -74,12 +74,13 @@ public class Client : MonoBehaviour
             {
                 Debug.Log($"{number}:{message}");
                 byte[] messageByte = new byte[5];
-                messageByte[0] = Convert.ToByte(message);
-                IntInsertToByteArray(number, ref messageByte, 1, 4);
+                IntInsertToByteArray(number, ref messageByte, 0, 3);
+                messageByte[4] = Convert.ToByte(message);
                 clientSocket.Send(CreateMessage(MessageType.Lost, ref messageByte));
             };
             ClaimHost = (message) =>
             {
+                Debug.Log(message);
                 byte[] messageByte = new byte[4];
                 IntInsertToByteArray(message, ref messageByte, 0, 3);
                 clientSocket.Send(CreateMessage(MessageType.Host, ref messageByte));
@@ -90,20 +91,26 @@ public class Client : MonoBehaviour
             RecieveArrive = (number, rps) => {
                 Debug.Log($"{number}");
                 if (!userInfo.ContainsKey(number)) 
-                { userInfo.Add(number, rps); }
+                { userInfo.Add(number, rps); 
+                lostInfo.Add(number, false); 
+                    Debug.Log($"{number} has Arrive:{rps}"); 
+                }
                 else
                 {
                     userInfo[number] = rps;
+                    Debug.Log("여기");
+                    ClaimLost(number, false) ;
                 }
-                lostInfo.Add(number, false); Debug.Log($"{number} has Arrive:{rps}"); };
+            };
             HostNumber = (number) => { hostNumber = number;
                 if (number == myNumber)
                 {
                     isHost = true;
                 }
                 else { isHost = false; }
-                Debug.Log($"HostNumber : {hostNumber}"); };
-            RecieveLost = (number, lost) => { lostInfo[number] = lost; };
+                Debug.Log($"HostNumber : {number}"); };
+            RecieveLost = (number, lost) => { lostInfo[number] = lost;
+            };
             RecieveRPS = (number, rps) =>
                 {
                     if (userInfo.ContainsKey(number))
@@ -167,23 +174,10 @@ public class Client : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if(Input.GetKeyDown(KeyCode.F12))
-        {
-            int numb = UnityEngine.Random.Range(0, userInfo.Count);
-            Debug.Log($"{numb}");
-            ClaimHost(numb);
-            if(numb == myNumber)
-            {
-                isHost= true;
-            }
-            else { isHost= false; }
-            
-        }
         if(Input.GetKeyDown(KeyCode.Escape))
         { 
             ClaimChat("3초 뒤 가위바위보를 합니다. 정해주세요.");
             isGameStart = true;
-            Debug.Log("dd");
         }
         if (messageQueue.TryDequeue(out byte[] buffer))
         {
@@ -212,24 +206,24 @@ public class Client : MonoBehaviour
                         {
                             if (guestData.Key != myNumber)
                             {
+                                Debug.Log($"{guestData.Key} 번은 죽었니?: {lostInfo[guestData.Key]}");
                                 if (!lostInfo[guestData.Key])
                                 {
                                     int result = GameRule.CheckRPS(userInfo[myNumber], guestData.Value);
                                     switch (result)
                                     {
                                         case 1:
-                                            ClaimChat($"{guestData.Key} 플레이어가 승리하였습니다!\n");
-                                            Debug.Log("이김");
+                                            ClaimChat($"{guestData.Key} 플레이어가 승리하였습니다!");
                                             loseStack++;
+                                            Debug.Log("이김");
                                             break;
                                         case 0:
-                                            ClaimChat($"{guestData.Key} 플레이어가 비겼습니다.\n");
+                                            ClaimChat($"{guestData.Key} 플레이어가 비겼습니다.");
                                             Debug.Log(" 비김");
                                             break;
                                         case -1:
-                                            ClaimChat($"{guestData.Key} 플레이어가 졌습니다...\n");
+                                            ClaimChat($"{guestData.Key} 플레이어가 졌습니다...");
                                             ClaimLost(guestData.Key, true);
-                                            Debug.Log("짐");
                                             break;
                                         default:
                                             ClaimChat($"{guestData.Key} 플레이어는... ?");
@@ -239,21 +233,22 @@ public class Client : MonoBehaviour
                                 }
                             }
                         }
-                        if(loseStack >= userInfo.Count)
+                        if(loseStack >= userInfo.Count-1)
                         {
-                            ClaimChat($"방장이 졌습니다.");
+                            ClaimChat($"방장이 졌습니다.{loseStack}");
+                            foreach (KeyValuePair<int, RPS> guestData in userInfo)
+                            {
+                                ClaimLost(guestData.Key, false);
+                                ClaimChat($"{guestData.Key} : {guestData.Value}");
+                            }
                         }
-                        currentTime = 0;
+                        else
+                        {
+                            ClaimChat($"계속 합니다.{loseStack}");
+                        }
                         loseStack = 0;
+                        currentTime = 0;
                         isGameStart = false;
-                    }
-                    else
-                    {
-                        ClaimChat($"축하합니다! 방장이 이겼습니다. 새롭게 시작됩니다.");
-                        foreach (KeyValuePair<int, RPS> guestData in userInfo)
-                        {
-                            ClaimLost(guestData.Key, false);
-                        }
                     }
                 }
             }
@@ -285,7 +280,7 @@ public class Client : MonoBehaviour
                 RecieveMyNumber(ByteArrayToInt(ref realBuffer, 0, 3));
                 break;
             case MessageType.Lost:
-                RecieveLost(ByteArrayToInt(ref realBuffer, 1, 4), Convert.ToBoolean(realBuffer[0]));
+                RecieveLost(ByteArrayToInt(ref realBuffer, 0, 3), Convert.ToBoolean(realBuffer[4]));
                 break;
             case MessageType.Host:
                 HostNumber(ByteArrayToInt(ref realBuffer, 0, 3));
@@ -318,7 +313,7 @@ public class Client : MonoBehaviour
 
         for (int i = end; i >= start; --i)
         {
-            array[i] = (byte)(0xFF000000 & (target >> 8 * (i - end)));
+            array[i] = (byte)(0x000000FF & (target >> 8 * (i - end)));
         }
     }
 
